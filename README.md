@@ -1,4 +1,8 @@
 <p align="center">
+    Lexical Analyzer and Parser Analyzer
+</p>
+
+<!-- <p align="center">
 <img width="300" alt="image" src="https://user-images.githubusercontent.com/35942268/226105723-86eb3042-fb51-4f51-b382-b833a952e9a2.png">
 </p>
 
@@ -197,4 +201,4 @@ If you have any problems or questions, please [submit an issue](https://github.c
 
 ## <span id="6">6、License</span>
 
-![GitHub](https://img.shields.io/github/license/WGrape/lexer)
+![GitHub](https://img.shields.io/github/license/WGrape/lexer) -->
