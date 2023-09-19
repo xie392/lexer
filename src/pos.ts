@@ -1,4 +1,4 @@
-import { isWhiteSpace } from "./shared"
+import { isLineBreak, isWhiteSpace } from './shared'
 
 export interface PositionOptions {
     source: string
@@ -12,6 +12,7 @@ class Position {
     private column: number
     private char: string
     private index: number
+    private oldColumn: number = 0
 
     constructor(options: PositionOptions) {
         this.source = options.source
@@ -29,42 +30,40 @@ class Position {
         return this.column
     }
 
-    /**
-     * 步进器
-     * 每次调用next()方法,返回下一个字符
-     * @returns string
-     */
-    next():string {
+    next() {
         this.column++
         this.index++
         this.char = this.source[this.index]
-        if (isWhiteSpace(this.char)) {
-            if (this.char === '\n') {
-                this.column = 0
-                this.line++
-            }
-            return this.next()
-        }
+        this.skipLine()
         return this.char
     }
 
-    /**
-     * 回退一个字符
-     * @returns string
-     */
-    back():string {
-        this.index--
-        this.column--
+    back() {
+        this.index = this.index === 0 ? 0 : this.index--
+        this.column = this.column === 0 ? this.oldColumn : this.column--
         this.char = this.source[this.index]
-        console.log('char',this.char,this.index);
-        
         return this.char
     }
 
     isEOF() {
-        return this.index >= this.source.length
+        return this.index >= this.source.length - 1
     }
 
+    skipLine() {
+        // 跳过空格
+        if (isWhiteSpace(this.char)) {
+            // 换行时修改行号和列号
+            if (isLineBreak(this.char)) {
+                this.oldColumn = this.column
+                this.column = 0
+                this.line++
+            }
+        }
+    }
+
+    toString() {
+        return `${this.line}:${this.column}
+    }
 }
 
 export default Position
