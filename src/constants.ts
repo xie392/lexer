@@ -28,8 +28,6 @@ export const OPERATOR = new Set([
     '.'
 ])
 
-export const WHITESPACE = new Set([' ', '\t', '\n', '\r'])
-
 export const DOUBLE_OPERATOR = new Set([
     '+=',
     '-=',
@@ -39,3 +37,9 @@ export const DOUBLE_OPERATOR = new Set([
     '==',
     '!='
 ])
+
+export const COMMOENT = new Set(['//', '/*', '*/']) 
+
+export const WHITESPACE = new Set([' ', '\t', '\n', '\r'])
+
+
