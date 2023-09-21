@@ -303,16 +303,15 @@ const keywords = new Set([
         }
   
         // 循环
-        if (this.matchValue('for')) { }
+        // if (this.matchValue('for')) { }
   
-        if (this.matchValue('while')) { }
+        // if (this.matchValue('while')) { }
   
-        if (this.matchValue('switch')) { }
+        // if (this.matchValue('switch')) { }
   
-        // 判断
-        if (this.matchValue('if')) { }
-  
-  
+        // // 判断
+        // if (this.matchValue('if')) { }
+
   
       }
   
@@ -389,6 +388,7 @@ const keywords = new Set([
           // 数组
           if (this.matchValue('[')) {
   
+            // eslint-disable-next-line no-constant-condition
             while (true) {
               tokens = this.nextToken()
               if (this.matchValue(']') && this.current < this.tokens.length) {
@@ -581,9 +581,7 @@ const keywords = new Set([
   try {
     // 读入一个程序
     // let input = fs.readFileSync(path.resolve(__dirname, "test/main.c"), "utf8", (err, data) => { })
-    const input = `int main(){
-        int a;
-    }`
+    const input = `int main`
     let c = new Compiler("C", input)
     c.tokenizer()
     c.parser()

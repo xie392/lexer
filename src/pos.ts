@@ -16,52 +16,85 @@ export interface Stream {
  */
 class Position {
     private source: string
-    private _stream: Stream
+    private stream: Stream
+    private oldColumn: number = 0
 
     constructor(source: string) {
         this.source = source
-        this._stream = {
+        this.stream = {
             char: '',
             index: 0,
-            line: 0,
+            line: 1,
             column: 0
         }
     }
 
-    get stream() {
-        return this._stream
+    get char() {
+        return this.stream.char
+    }
+
+    get line() {
+        return this.stream.line
+    }
+
+    get column() {
+        return this.stream.column
+    }
+
+    get prevChar() {
+        return this.source[this.stream.index - 1]
+    }
+
+    get isEOF() {
+        return this.stream.index > this.source.length
+    }
+
+    getPrevChar(index: number = 1) {
+        return this.source[this.stream.index - index]
     }
 
     next() {
         this.skipLine()
-        this._stream.char = this.source[this._stream.index++]
-        this._stream.column++
-        return this._stream.char
+        this.stream.char = this.source[this.stream.index++]
+        this.stream.column++
+        return this.stream.char
     }
 
-    // back(step: number = 1) {
-    //     this.index = this.index === 0 ? 0 : this.index - step
-    //     this._column = this.column === 0 ? this.oldColumn : this.column - step
-    //     console.log('index-- end: ', this.index)
-    //     this._char = this.source[this.index]
-    //     return this.char
-    // }
-
-    isEOF() {
-        return !(this._stream.index <= this.source.length)
+    back(step: number = 1) {
+        const index = this.stream.index
+        this.stream.char = this.source[index === 0 ? index : this.stream.index--]
+        this.skipLine(true)
+        return this.char
     }
 
-    private skipLine() {
-        if (isWhiteSpace(this._stream.char) && isLineBreak(this._stream.char)) {
-            this._stream.column = 0
-            this._stream.line++
+    read(cb: () => void) {
+        if (this.isEOF) return
+        this.next() && cb()
+        this.read(cb)
+    }
+
+    private skipLine(isBack: boolean = false) {
+        if (isWhiteSpace(this.stream.char) && isLineBreak(this.stream.char)) {
+            if (!isBack) {
+                this.oldColumn = this.stream.column
+                this.stream.column = 0
+                this.stream.line++
+            } else {
+                this.stream.column = this.oldColumn
+                this.stream.line--
+            }
         }
     }
 
     toString() {
-        return `${this._stream.line}:${this._stream.column}`
+        return `${this.stream.line}:${this.stream.column}`
     }
 
+    toErrorPosition(message: string = '', value: string = this.getPrevChar()) {
+        throw new Error(
+            `Unexpected character: ${message} "${value}" at ${this.stream.line}:${this.stream.column}`
+        )
+    }
 }
 
 export default Position

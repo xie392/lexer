@@ -1,13 +1,17 @@
 import { TokenType } from './constants'
 import Position from './pos'
 import {
+    isBrackets,
     isDoubleOperator,
     isIdentifier,
     isKeyWords,
     isNumber,
     isOperator,
+    isPoint,
     isString,
-    isWhiteSpace
+    isStringSymbol,
+    isWhiteSpace,
+    removeComment
 } from './helper'
 
 export interface TokenizerImplOptions {}
@@ -20,34 +24,20 @@ export interface Token {
     pos: { line: number; column: number }
 }
 
-let newChar: string
-let oldChar: string
-
-// enum Char {
-//     NEW_CH = 'NEW_CH',
-//     OLD_CH = 'OLD_CH'
-// }
-
-// const char = new Map<Char, string>([
-//     [Char.NEW_CH, ''],
-//     [Char.OLD_CH, '']
-// ])
-
-const CHAR = {
-    OLDCHAR: '',
-    NEWCHAR: ''
+const STREAM = {
+    CHAR: '',
+    BACK: false,
+    VALUE: ''
 }
+
 class TokenizerImpl {
-    private _pos: Position
+    private position: Position
     private options?: TokenizerImplOptions
     private tokens: Token[] = []
-
-    get stream() {
-        return this._pos.stream
-    }
+    private brackets: string[] = []
 
     get pos() {
-        return this._pos
+        return this.position
     }
 
     /**
@@ -56,35 +46,36 @@ class TokenizerImpl {
      * @param {TokenizerImplOptions} options 可选参数 // TODO: 可能后续会增加
      */
     constructor(source: string, options?: TokenizerImplOptions) {
-        this._pos = new Position(source)
+        this.position = new Position(removeComment(source))
         // this.options = options
-    }
-
-    read(cb: () => void) {
-        if (this._pos.isEOF()) return
-        CHAR.NEWCHAR = CHAR.OLDCHAR = ''
-        this._pos.next() && cb()
-        this.read(cb)
     }
 
     lexer() {
         const process = new processImpl(this)
-        this.read(() => {
-            console.log('char', this.stream.char)
+        this.position.read(() => {
+            STREAM.VALUE = STREAM.CHAR = ''
             const token = process.process()
             this.addToken(token.type, token.value)
         })
 
-        console.log('tokens: ', this.tokens)
+        if (!processBrackets(this.brackets)) {
+            this.pos.toErrorPosition(`Missing brackets`, `"{" | "[" | "(" | ")" | "]" | "}"`)
+        }
 
-        return this.tokens
+        const tokens = this.tokens.filter((token) => token.type !== TokenType.SPACE)
+        console.log('tokens: ', tokens)
+        return tokens
+    }
+
+    setBrackets(char: string) {
+        this.brackets.push(char)
     }
 
     private addToken(type: Type, value: string) {
         this.tokens.push({
             type,
             value,
-            pos: { line: this.stream.line, column: this.stream.column }
+            pos: { line: this.position.line, column: this.position.column }
         })
     }
 }
@@ -97,74 +88,80 @@ class processImpl {
     }
 
     process() {
-        let type = processType(this.tokenizer.stream.char)
-        let value = ''
-        if (type === TokenType.NULL) this.processWhiteSpace()
+        let type = processType(this.tokenizer.pos.char)
 
+        // DFA (Deterministic Finite Automaton)
         switch (type) {
+            case TokenType.SPACE:
+                break
             case TokenType.NUMBER:
-                value = this.processNumber()
+                this.processNumber()
                 break
             case TokenType.OPERATOR:
-                value = this.processOperator()
+                this.processOperator()
                 break
             case TokenType.IDENTIFIER:
-                value = this.processIdentifier()
-                type = isKeyWords(value)
-                    ? TokenType.KEYWORD
-                    : TokenType.IDENTIFIER
+                this.processIdentifier()
+                type = isKeyWords(STREAM.VALUE) ? TokenType.KEYWORD : TokenType.IDENTIFIER
                 break
             case TokenType.STRING:
-                value = this.processString()
+                this.processString()
                 break
             default:
-                // throw new Error(
-                //     `Unknown char: ${this.char} at ${this.pos.toString()}`
-                // )
-                break
+                this.tokenizer.pos.toErrorPosition()
         }
 
-        return { type, value }
+        return { type, value: STREAM.VALUE }
     }
 
-    processWhiteSpace() {
-        while (
-            isWhiteSpace(this.tokenizer.stream.char) &&
-            !this.tokenizer.pos.isEOF()
-        ) {
-            this.tokenizer.pos.next()
+    private processNumber() {
+        const fn = (char: string) => isNumber(char) || isPoint(char)
+        this.processValue(fn)
+        const dotCount = (STREAM.VALUE.match(/\./g) || []).length
+
+        if (dotCount > 1) this.tokenizer.pos.toErrorPosition(`Too many '.' in number`, STREAM.VALUE)
+    }
+
+    private processOperator() {
+        STREAM.VALUE = this.tokenizer.pos.char
+
+        if (isBrackets(STREAM.VALUE)) this.tokenizer.setBrackets(STREAM.VALUE)
+
+        STREAM.CHAR = this.tokenizer.pos.next()
+        if (isDoubleOperator(STREAM.CHAR + STREAM.CHAR)) {
+            STREAM.VALUE += STREAM.CHAR
+            return
+        }
+        this.tokenizer.pos.back()
+    }
+
+    private processIdentifier() {
+        this.processValue(isIdentifier)
+    }
+
+    private processString() {
+        const symbol = this.tokenizer.pos.char // '"' or "'""
+        const line = this.tokenizer.pos.line
+        for (;;) {
+            STREAM.CHAR = this.tokenizer.pos.next()
+            if (isStringSymbol(STREAM.CHAR, symbol) || this.tokenizer.pos.isEOF) break
+            STREAM.VALUE += STREAM.CHAR
+        }
+
+        if (line !== this.tokenizer.pos.line) {
+            this.tokenizer.pos.toErrorPosition(`Unclosed string`, STREAM.VALUE)
         }
     }
 
-    processNumber() {
-        return ''
-    }
-
-    processOperator() {
-        // oldChar = this.tokenizer.char
-        // while (this.isNext() && isOperator(oldChar)) {
-        //     newChar += oldChar
-        //     oldChar = this.tokenizer.pos.next()
-        // }
-        // console.log('newChar: ', newChar, 'oldChar: ', oldChar)
-        return newChar
-    }
-
-    processIdentifier() {
-        CHAR.OLDCHAR = this.tokenizer.stream.char
-        while (this.isNext() && isIdentifier(CHAR.OLDCHAR)) {
-            CHAR.NEWCHAR += CHAR.OLDCHAR
-            CHAR.OLDCHAR = this.tokenizer.pos.next()
+    private processValue(fn: (char: string) => boolean) {
+        STREAM.CHAR = this.tokenizer.pos.char
+        for (;;) {
+            if (!fn(STREAM.CHAR) || this.tokenizer.pos.isEOF) break
+            STREAM.VALUE += STREAM.CHAR
+            STREAM.CHAR = this.tokenizer.pos.next()
         }
-        return CHAR.NEWCHAR
-    }
-
-    processString() {
-        return ''
-    }
-
-    private isNext() {
-        return !isWhiteSpace(oldChar) && !this.tokenizer.pos.isEOF()
+        if (!STREAM.VALUE) STREAM.VALUE = STREAM.CHAR
+        if (!this.tokenizer.pos.isEOF) this.tokenizer.pos.back()
     }
 }
 
@@ -175,6 +172,17 @@ function processType(char: string) {
     if (isIdentifier(char)) return TokenType.IDENTIFIER
     if (isString(char)) return TokenType.STRING
     return TokenType.NULL
+}
+
+function processBrackets(char: string[]) {
+    const stack = []
+    if (char.length % 2 !== 0) return false
+    for (let i = 0; i < char.length; i++) {
+        const c = char[i]
+        if (['{', '[', '('].includes(c)) stack.push(c)
+        if (['}', ']', ')'].includes(c)) stack.pop()
+    }
+    return stack.length === 0
 }
 
 export default TokenizerImpl
