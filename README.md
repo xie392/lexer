@@ -1,26 +1,19 @@
 <p align="center">
-    Lexical Analyzer and Parser Analyzer
-</p>
-
-<!-- <p align="center">
-<img width="300" alt="image" src="https://user-images.githubusercontent.com/35942268/226105723-86eb3042-fb51-4f51-b382-b833a952e9a2.png">
+    <img src="./accets/lintcode.svg" width="300">
 </p>
 
 <p align="center">
-   <a href="https://www.oscs1024.com/project/oscs/xie392/lexer?ref=badge_small" alt="OSCS Status"><img src="https://www.oscs1024.com/platform/badge/xie392/lexer.svg?size=small"/></a>
-    <img src="https://img.shields.io/badge/JavaScript-ES5+-blue.svg">
-    <img src="https://img.shields.io/npm/dt/chain-lexer.svg">
-    <a href="https://app.travis-ci.com/github/xie392/lexer"><img src="https://app.travis-ci.com/xie392/lexer.svg?branch=main"><a>
-    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/xie392/lexer">
+    <img src="https://img.shields.io/badge/TypeScript-ES5+-blue.svg">
     <img src="https://img.shields.io/badge/Document-中文/English-orange.svg">
-    <img src="https://img.shields.io/badge/License-MIT-green.svg">   
+    <img src="https://img.shields.io/badge/License-MIT-green.svg">
 </p>
 
-<div align="center">    
-    <p>It is a lexer and parser built using typescript</p>
+<div align="center">
+    <p>It is a `C` language lexer built using typescript</p>
     <p>Document ：<a href="/README.zh-CN.md">中文</a> / <a href="/README.md">English</a></p>
 </div>
 
+<!---
 <details>
   <summary>Contents</summary>
 
@@ -96,7 +89,7 @@ After ```git clone``` command, no need for any dependencies, and no extra instal
 
 ### <span id="41">(1) In your project</span>
 
-If you need use ```lexer``` in your project, such as code editor, etc. 
+If you need use ```lexer``` in your project, such as code editor, etc.
 
 #### Using NPM
 ```

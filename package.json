@@ -1,16 +1,22 @@
 {
   "name": "lexer",
   "version": "1.0.0",
-  "description": "",
+  "description": "It is a lexer and parser of C built using typescript",
   "type": "module",
   "scripts": {
     "test": "jest",
     "prettier": "prettier --write ./src",
     "lint": "eslint ./src"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "lexer",
+    "parser",
+    "c",
+    "typescript",
+    "tokenizer"
+  ],
+  "author": "xie392",
+  "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.22.20",
     "@babel/preset-env": "^7.22.20",
