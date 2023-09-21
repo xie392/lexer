@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./accets/lintcode.svg" width="300">
+    <img src="./accets/lintcode.svg" width="200" height="100">
 </p>
 
 <p align="center">

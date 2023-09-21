@@ -10,6 +10,10 @@ module.exports = {
         "prettier"
     ],
     "overrides": [
+        {
+            files: ['src/**/*.ts', 'src/*.ts'],
+            rules: {},
+        },
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
@@ -21,5 +25,6 @@ module.exports = {
     ],
     "rules": {
         "@typescript-eslint/no-unused-vars": "off",
-    }
+    },
+    ignorePatterns: ['node_modules/', 'build/', 'dist/'],
 }

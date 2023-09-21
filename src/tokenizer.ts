@@ -185,4 +185,8 @@ function processBrackets(char: string[]) {
     return stack.length === 0
 }
 
+export function createTokenizer(source: string, options?: TokenizerImplOptions) {
+    return new TokenizerImpl(source, options)
+}
+
 export default TokenizerImpl
