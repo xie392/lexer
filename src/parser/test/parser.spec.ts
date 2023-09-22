@@ -5,5 +5,4 @@ describe('parser', () => {
         const code = `int a = 1;`
         createParser(code)
     })
-
 })

@@ -1,5 +1,5 @@
 {
-  "name": "lexer",
+  "name": "lexers",
   "version": "1.0.0",
   "description": "It is a lexer and parser of C built using typescript",
   "type": "module",
