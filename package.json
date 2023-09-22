@@ -9,6 +9,25 @@
   "files": [
     "lib"
   ],
+  "output": [
+    {
+      "file": "lib/index.umd.js",
+      "format": "umd",
+      "name": "Lexer"
+    },
+    {
+      "file": "lib/index.esm.js",
+      "format": "es"
+    },
+    {
+      "file": "lib/index.cjs.js",
+      "format": "cjs"
+    },
+    {
+      "file": "lib/index.d.ts",
+      "format": "es"
+    }
+  ],
   "types": "lib/index.d.ts",
   "exports": {
     ".": {
