@@ -581,7 +581,13 @@ const keywords = new Set([
   try {
     // 读入一个程序
     // let input = fs.readFileSync(path.resolve(__dirname, "test/main.c"), "utf8", (err, data) => { })
-    const input = `int main`
+    const input = `
+    #include <stdio.h>
+    int main(){
+      int a = 1;
+      int b = 2;
+      int c = a + b;
+    }`
     let c = new Compiler("C", input)
     c.tokenizer()
     c.parser()

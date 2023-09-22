@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./accets/lintcode.svg" width="200" height="100">
+    <img src="./vendor/accets/lintcode.svg" width="200" height="100">
 </p>
 
 <p align="center">
@@ -9,6 +9,6 @@
 </p>
 
 <div align="center">
-    <p>它是一个使用 typescript 构建的`C`语言词法分析器</p>
+    <p>它是一个使用 typescript 构建的 C 语言词法分析器</p>
     <p>文档：<a href="/README.zh-CN.md">中文</a> / <a href="/README.md">English</a></p>
 </div>

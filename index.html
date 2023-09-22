@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-ico" href="./vendor/accets/lintcode.svg">
     <!-- keywords -->
     <meta name="keywords"
         content="Lexer, Parser, C, Typescript, Tokenizer, Compiler, lexer, parser, c, typescript, 词法分析器, 语法分析器, 解析器, C语言, C语言词法分析器, C语言解析器">
@@ -11,21 +12,109 @@
     <meta name="description"
         content="It is a lexer and parser of C built using typescript. 它是一个使用 typescript 构建的`C`语言词法分析器">
     <!-- Tailwind CSS  -->
-    <script src="./voden/js/tailwind.min.js"></script>
+    <!-- <script src="./vendor/js/tailwind.min.js"></script> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Highlight CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css">
     <!-- Base CSS -->
-    <link rel="stylesheet" href="./voden/css/base.css">
+    <link rel="stylesheet" href="./vendor/css/base.css">
     <title>LintCode</title>
 </head>
 
 <body>
     <div class="min-h-screen">
-        <header class="h-14 border-b border-gray-200 flex justify-between items-center px-5">
-            <img src="./accets/lintcode.svg" alt="logo" width="100" height="40">
+        <!-- Header Start -->
+        <header
+            class="h-14 border-b border-gray-200 flex justify-between items-center pl-6 pr-0 sticky  top-0 z-10 bg-white">
+            <img src="./vendor/accets/lintcode.svg" alt="logo" width="100" height="40">
+            <iframe src="https://ghbtns.com/github-btn.html?user=xie392&repo=lexer&type=star&count=true" frameborder="0"
+                width="100" height="20"></iframe>
         </header>
-        <main class="p-5">
-            Hello world
-        </main>
+        <!-- Header End  -->
+
+        <!-- Main  Start -->
+        <main class="p-5 w-full flex justify-center pb-5">
+            <div class="w-[1200px]">
+                <!-- This is a lexer and parser of C built using typescript -->
+                <h2 class="mt-5 mb-2 text-[16px] font-bold">LintCode</h2>
+                <p class="text-gray-500">
+                    You can see a C lexer built on typescript here!
+                </p>
+                <div class="w-full flex gap-10">
+                    <div class="flex-1">
+                        <h2 class="mt-5 mb-2 text-[16px] font-bold">Input Code</h2>
+                        <div id="editor"
+                            class="w-full h-[calc(100vh-250px)] rounded  border border-gray-200 text-[14px] leading-6">
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="mt-5 mb-2 text-[16px] font-bold">Output Tokenizer</h2>
+                        <div class=" h-[calc(100vh-250px)] overflow-auto bg-[#272822]">
+                            <pre><code class="language-json" id="highlight"></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
     </div>
+    </main>
+    <!-- Main End -->
+    </div>
+
+    <!-- AceEditor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.27.0/ace.min.js"
+        integrity="sha512-NIVwb3NmqzaYGR2WMGwavEtl74X7bAdez/5IQ7sKI0xXeOx1bsv1SUL0NCqExWcxGHG6brV6vU1HTyT7RNtLpA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Highlight  -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/json.min.js"></script>
+    <script src="./lib/index.umd.js"></script>
+    <script>
+        // Ace Editor
+        const code = "#include <stdio.h>" + "\n\n"
+            + "int main() {" + "\n"
+            + "    printf(\"hello world!\");" + "\n"
+            + "    return 0;" + "\n"
+            + "}"
+        const editor = ace.edit("editor")
+        editor.setTheme("ace/theme/monokai")
+        editor.session.setMode("ace/mode/c_cpp")
+        editor.setHighlightActiveLine(false)
+        editor.insert(code)
+
+        // Highlight
+        const highlightElement = document.getElementById("highlight")
+        hljs.highlightBlock(highlightElement)
+        const tokenizer = lexer.createTokenizer(code)
+        highlightElement.textContent = JSON.stringify(tokenizer.lexer(), null, 2)
+        hljs.highlightAll()
+
+        function debounce(func, wait = 1000) {
+            let timeout
+            return (...args) => {
+                timeout && clearTimeout(timeout)
+                timeout = setTimeout(() => {
+                    func.apply(this, args)
+                }, wait)
+            }
+        }
+
+        function change(value) {
+            try {
+                const tokenizer = lexer.createTokenizer(value)
+                highlightElement.textContent = JSON.stringify(tokenizer.lexer(value), null, 2)
+                hljs.highlightAll()
+            } catch (error) {
+                highlightElement.textContent = error
+            }
+        }
+
+        const fn = debounce(change, 1000)
+
+        editor.session.on('change', () => {
+            fn(editor.getValue())
+        })
+    </script>
+
 </body>
 
 </html>

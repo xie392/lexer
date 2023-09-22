@@ -1,4 +1,4 @@
-import { TokenType } from './constants'
+import { TOKEN } from '../shared/constants'
 import Position from './pos'
 import {
     isBrackets,
@@ -12,11 +12,11 @@ import {
     isStringSymbol,
     isWhiteSpace,
     removeComment
-} from './helper'
+} from '../shared'
 
 export interface TokenizerImplOptions {}
 
-type Type = TokenType[keyof TokenType]
+type Type = TOKEN[keyof TOKEN]
 
 export interface Token {
     type: Type
@@ -40,6 +40,10 @@ class TokenizerImpl {
         return this.position
     }
 
+    get tokensAll() {
+        return this.tokens
+    }
+
     /**
      * 词法分析器
      * @param {string} source    源代码
@@ -48,6 +52,7 @@ class TokenizerImpl {
     constructor(source: string, options?: TokenizerImplOptions) {
         this.position = new Position(removeComment(source))
         // this.options = options
+        // this.lexer()
     }
 
     lexer() {
@@ -62,8 +67,8 @@ class TokenizerImpl {
             this.pos.toErrorPosition(`Missing brackets`, `"{" | "[" | "(" | ")" | "]" | "}"`)
         }
 
-        const tokens = this.tokens.filter((token) => token.type !== TokenType.SPACE)
-        console.log('tokens: ', tokens)
+        const tokens = this.tokens.filter((token) => token.type !== TOKEN.SPACE)
+        // console.log('tokens: ', tokens)
         return tokens
     }
 
@@ -92,19 +97,19 @@ class processImpl {
 
         // DFA (Deterministic Finite Automaton)
         switch (type) {
-            case TokenType.SPACE:
+            case TOKEN.SPACE:
                 break
-            case TokenType.NUMBER:
+            case TOKEN.NUMBER:
                 this.processNumber()
                 break
-            case TokenType.OPERATOR:
+            case TOKEN.OPERATOR:
                 this.processOperator()
                 break
-            case TokenType.IDENTIFIER:
+            case TOKEN.IDENTIFIER:
                 this.processIdentifier()
-                type = isKeyWords(STREAM.VALUE) ? TokenType.KEYWORD : TokenType.IDENTIFIER
+                type = isKeyWords(STREAM.VALUE) ? TOKEN.KEYWORD : TOKEN.IDENTIFIER
                 break
-            case TokenType.STRING:
+            case TOKEN.STRING:
                 this.processString()
                 break
             default:
@@ -166,12 +171,12 @@ class processImpl {
 }
 
 function processType(char: string) {
-    if (isWhiteSpace(char)) return TokenType.SPACE
-    if (isNumber(char)) return TokenType.NUMBER
-    if (isOperator(char)) return TokenType.OPERATOR
-    if (isIdentifier(char)) return TokenType.IDENTIFIER
-    if (isString(char)) return TokenType.STRING
-    return TokenType.NULL
+    if (isWhiteSpace(char)) return TOKEN.SPACE
+    if (isNumber(char)) return TOKEN.NUMBER
+    if (isOperator(char)) return TOKEN.OPERATOR
+    if (isIdentifier(char)) return TOKEN.IDENTIFIER
+    if (isString(char)) return TOKEN.STRING
+    return TOKEN.NULL
 }
 
 function processBrackets(char: string[]) {

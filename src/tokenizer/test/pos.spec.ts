@@ -19,6 +19,4 @@ o`
         expect(char).toBe('o')
 
     })
-
-
 })

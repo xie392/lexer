@@ -1,4 +1,4 @@
-import { isLineBreak, isWhiteSpace } from './helper'
+import { isLineBreak, isWhiteSpace } from '../shared'
 
 export interface Stream {
     char: string

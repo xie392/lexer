@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./accets/lintcode.svg" width="200" height="100">
+    <img src="./vendor/accets/lintcode.svg" width="200" height="100">
 </p>
 
 <p align="center">
@@ -9,7 +9,7 @@
 </p>
 
 <div align="center">
-    <p>It is a `C` language lexer built using typescript</p>
+    <p>It is a C language lexer built using typescript</p>
     <p>Document ：<a href="/README.zh-CN.md">中文</a> / <a href="/README.md">English</a></p>
 </div>
 

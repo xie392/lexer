@@ -1,1 +1,1 @@
-export { createTokenizer } from './tokenizer'
+export * from './tokenizer'
