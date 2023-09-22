@@ -36,11 +36,11 @@
         <main class="p-5 w-full flex justify-center pb-5">
             <div class="w-[1200px]">
                 <!-- This is a lexer and parser of C built using typescript -->
-                <h2 class="mt-5 mb-2 text-[16px] font-bold">LintCode</h2>
+                <h1 class="mt-5 mb-2 text-[24px] font-bold">LintCode</h1>
                 <p class="text-gray-500">
                     You can see a C lexer built on typescript here!
                 </p>
-                <div class="w-full flex gap-10">
+                <div class="w-full flex gap-10 mb-8">
                     <div class="flex-1">
                         <h2 class="mt-5 mb-2 text-[16px] font-bold">Input Code</h2>
                         <div id="editor"
@@ -51,6 +51,25 @@
                         <h2 class="mt-5 mb-2 text-[16px] font-bold">Output Tokenizer</h2>
                         <div class=" h-[calc(100vh-250px)] overflow-auto bg-[#272822]">
                             <pre><code class="language-json" id="highlight"></code></pre>
+                        </div>
+                    </div>
+                </div>
+                <h1 class="mt-5 mb-2 text-[24px] font-bold">Old version of the parser</h1>
+                <p class="text-gray-500">
+                    This is the first version of the parser. This is a very bad code. The grammar parser only parses a
+                    little bit and is not perfect. So just take a look.
+                </p>
+                <div class="w-full flex gap-10">
+                    <div class="flex-1">
+                        <h2 class="mt-5 mb-2 text-[16px] font-bold">Output Tokenizer</h2>
+                        <div class=" h-[calc(100vh-250px)] overflow-auto bg-[#272822]">
+                            <pre><code class="language-json" id="highlight2"></code></pre>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="mt-5 mb-2 text-[16px] font-bold">Output Parser</h2>
+                        <div class=" h-[calc(100vh-250px)] overflow-auto bg-[#272822]">
+                            <pre><code class="language-json" id="highlight3"></code></pre>
                         </div>
                     </div>
                 </div>
@@ -68,6 +87,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/json.min.js"></script>
     <script src="./lib/index.umd.js"></script>
+    <script src="./js/old.js"></script>
     <script>
         // Ace Editor
         const code = "#include <stdio.h>" + "\n\n"
@@ -83,10 +103,36 @@
 
         // Highlight
         const highlightElement = document.getElementById("highlight")
-        hljs.highlightBlock(highlightElement)
-        const tokenizer = lexer.createTokenizer(code)
-        highlightElement.textContent = JSON.stringify(tokenizer.lexer(), null, 2)
-        hljs.highlightAll()
+        const highlightEl2 = document.getElementById("highlight2")
+        const highlightEl3 = document.getElementById("highlight3")
+
+        function init(value) {
+            try {
+                const tokenizer = lexer.createTokenizer(value)
+                highlightElement.textContent = JSON.stringify(tokenizer.lexer(value), null, 2)
+            } catch (error) {
+                highlightElement.textContent = error
+            }
+
+            // old 
+            const c = new Compiler("C", value)
+
+            try {
+                highlightEl2.textContent = JSON.stringify(c.tokenizer(), null, 2)
+            } catch (error) {
+                highlightEl2.textContent = error
+            }
+
+            try {
+                highlightEl3.textContent = JSON.stringify(c.parser(), null, 2)
+            } catch (error) {
+                highlightEl3.textContent = error
+            }
+
+            hljs.highlightAll()
+        }
+
+        init(code)
 
         function debounce(func, wait = 1000) {
             let timeout
@@ -99,13 +145,7 @@
         }
 
         function change(value) {
-            try {
-                const tokenizer = lexer.createTokenizer(value)
-                highlightElement.textContent = JSON.stringify(tokenizer.lexer(value), null, 2)
-                hljs.highlightAll()
-            } catch (error) {
-                highlightElement.textContent = error
-            }
+            init(value)
         }
 
         const fn = debounce(change, 1000)
