@@ -3,32 +3,32 @@
   "version": "1.0.0",
   "description": "It is a lexer and parser of C built using typescript",
   "type": "module",
-  "main": "lib/index.cjs.js",
-  "module": "lib/index.esm.js",
-  "browser": "lib/index.umd.js",
+  "main": "public/lib/index.cjs.js",
+  "module": "public/lib/index.esm.js",
+  "browser": "public/lib/index.umd.js",
   "files": [
-    "lib"
+    "public/lib"
   ],
   "output": [
     {
-      "file": "lib/index.umd.js",
+      "file": "public/lib/index.umd.js",
       "format": "umd",
       "name": "lexer"
     },
     {
-      "file": "lib/index.esm.js",
+      "file": "public/lib/index.esm.js",
       "format": "es"
     },
     {
-      "file": "lib/index.cjs.js",
+      "file": "public/lib/index.cjs.js",
       "format": "cjs"
     },
     {
-      "file": "lib/index.d.ts",
+      "file": "public/lib/index.d.ts",
       "format": "es"
     }
   ],
-  "types": "lib/index.d.ts",
+  "types": "public/lib/index.d.ts",
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
