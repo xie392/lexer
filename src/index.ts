@@ -1,3 +1,3 @@
-export * from './tokenizer'
+import Tokenizer from './tokenizer'
 
-
+export default Tokenizer

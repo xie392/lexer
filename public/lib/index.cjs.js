@@ -1,92 +1,42 @@
 'use strict';
 
-const KEYWORDS = new Set([
-    'auto',
-    'break',
-    'case',
-    'char',
-    'const',
-    'continue',
-    'default',
-    'do',
-    'double',
-    'else',
-    'enum',
-    'extern',
-    'float',
-    'for',
-    'goto',
-    'if',
-    'int',
-    'long',
-    'register',
-    'return',
-    'short',
-    'signed',
-    'sizeof',
-    'static',
-    'struct',
-    'switch',
-    'typedef',
-    'union',
-    'unsigned',
-    'void',
-    'volatile',
-    'while'
+const REG = {
+    IDENTIFIER: /[a-z_$*0-9]/i,
+    KEYWORD: /\b(char|const|double|float|int|sizeof|static|struct|typedef|void)\b/,
+    STRING: /('|")/,
+    NUMBER: /[0-9]/,
+    OPERATOR: /[-+*\\/%=(){}\\[\];,.<>#]/,
+    OPERATORS: /(>=|->|\+\+|--|<<|>>|<=|==|!=|&&|\|\||\+=|-=|\*=|\/=|%=|&=|\^=|\|=)/g,
+    BRACKET: /[{}[\]()]/,
+    WHITESPACE: /\s+/,
+    COMMOENT: /\/\/.*|\/\*[\s\S]*?\*\//g
+    // LINE: /\n/g
+};
+var TokenType;
+(function (TokenType) {
+    TokenType["IDENTIFIER"] = "IDENTIFIER";
+    TokenType["KEYWORD"] = "KEYWORD";
+    TokenType["STRING"] = "STRING";
+    TokenType["NUMBER"] = "NUMBER";
+    TokenType["OPERATOR"] = "OPERATOR";
+    TokenType["OPERATORS"] = "OPERATORS";
+    TokenType["BRACKET"] = "BRACKET";
+    TokenType["WHITESPACE"] = "WHITESPACE";
+    TokenType["COMMOENT"] = "COMMOENT";
+    // LINE = 'LINE'
+})(TokenType || (TokenType = {}));
+const REGEXP = new Map([
+    [TokenType.IDENTIFIER, REG.IDENTIFIER],
+    [TokenType.KEYWORD, REG.KEYWORD],
+    [TokenType.STRING, REG.STRING],
+    [TokenType.NUMBER, REG.NUMBER],
+    [TokenType.OPERATOR, REG.OPERATOR],
+    [TokenType.OPERATORS, REG.OPERATORS],
+    [TokenType.BRACKET, REG.BRACKET],
+    [TokenType.WHITESPACE, REG.WHITESPACE],
+    [TokenType.COMMOENT, REG.COMMOENT]
+    // [TokenType.LINE, REG.LINE]
 ]);
-const OPERATOR = new Set([
-    '+',
-    '-',
-    '*',
-    '/',
-    '%',
-    '=',
-    '(',
-    ')',
-    '{',
-    '}',
-    '[',
-    ']',
-    ';',
-    ',',
-    '.',
-    '#',
-    '<',
-    '>'
-]);
-const DOUBLE_OPERATOR = new Set([
-    '>=',
-    '->',
-    '++',
-    '--',
-    '<<',
-    '>>',
-    '<=',
-    '==',
-    '!=',
-    '&&',
-    '||',
-    '+=',
-    '-=',
-    '*=',
-    '/=',
-    '%=',
-    '&=',
-    '^=',
-    '|='
-]);
-const WHITESPACE = new Set([' ', '\t', '\n', '\r']);
-const BRACKETS = new Set(['{', '[', '(', ')', ']', '}']);
-var TOKEN;
-(function (TOKEN) {
-    TOKEN["STRING"] = "string";
-    TOKEN["NUMBER"] = "number";
-    TOKEN["OPERATOR"] = "operator";
-    TOKEN["KEYWORD"] = "keyword";
-    TOKEN["IDENTIFIER"] = "identifier";
-    TOKEN["NULL"] = "null";
-    TOKEN["SPACE"] = "space";
-})(TOKEN || (TOKEN = {}));
 var AST;
 (function (AST) {
     AST["PROGRAM"] = "Program";
@@ -95,260 +45,67 @@ var AST;
     AST["BLOCKSTATEMENT"] = "BlockStatement";
 })(AST || (AST = {}));
 
-function isUndefined(char) {
-    return char === undefined;
-}
-function isWhiteSpace(char) {
-    return !isUndefined(char) && WHITESPACE.has(char);
-}
-function isLineBreak(char) {
-    return !isUndefined(char) && char === '\n';
-}
-function isKeyWords(char) {
-    return !isUndefined(char) && KEYWORDS.has(char);
-}
-function isOperator(char) {
-    return !isUndefined(char) && OPERATOR.has(char);
-}
-function isDoubleOperator(char) {
-    return !isUndefined(char) && DOUBLE_OPERATOR.has(char);
-}
-function isNumber(char) {
-    return !isUndefined(char) && /[0-9]/.test(char);
-}
-function isIdentifier(char) {
-    return !isUndefined(char) && /[_a-z0-9]/i.test(char);
-}
-function isString(char) {
-    return !isUndefined(char) && [`"`, `'`].includes(char);
-}
-function isPoint(char) {
-    return !isUndefined(char) && char === '.';
-}
-function isStringSymbol(char, oldChar) {
-    return char === oldChar;
-}
-function isBrackets(char) {
-    return !isUndefined(char) && BRACKETS.has(char);
-}
-function removeComment(str) {
-    return str.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
-}
-
 /**
- * Read stream
- * @param {string} source code
- * @example
- * const pos = new Position('hello')
- * console.log(pos.next())  // h
+ * Returns the regular expression associated with the given token type.
+ *
+ * @param {TokenType} type - The token type
+ * @return {RegExp} The regular expression for the given token type
  */
-class Position {
-    constructor(source) {
-        this.oldColumn = 0;
-        this.source = source;
-        this.stream = {
-            char: '',
-            index: 0,
-            line: 1,
-            column: 0
-        };
-    }
-    get char() {
-        return this.stream.char;
-    }
-    get line() {
-        return this.stream.line;
-    }
-    get column() {
-        return this.stream.column;
-    }
-    get prevChar() {
-        return this.source[this.stream.index - 1];
-    }
-    get isEOF() {
-        return this.stream.index > this.source.length;
-    }
-    getPrevChar(index = 1) {
-        return this.source[this.stream.index - index];
-    }
-    next() {
-        this.skipLine();
-        this.stream.char = this.source[this.stream.index++];
-        this.stream.column++;
-        return this.stream.char;
-    }
-    back(step = 1) {
-        const index = this.stream.index;
-        this.stream.char = this.source[index === 0 ? index : this.stream.index--];
-        this.skipLine(true);
-        return this.char;
-    }
-    read(cb) {
-        if (this.isEOF)
-            return;
-        this.next() && cb();
-        this.read(cb);
-    }
-    skipLine(isBack = false) {
-        if (isWhiteSpace(this.stream.char) && isLineBreak(this.stream.char)) {
-            if (!isBack) {
-                this.oldColumn = this.stream.column;
-                this.stream.column = 0;
-                this.stream.line++;
-            }
-            else {
-                this.stream.column = this.oldColumn;
-                this.stream.line--;
-            }
-        }
-    }
-    toString() {
-        return `${this.stream.line}:${this.stream.column}`;
-    }
-    toErrorPosition(message = '', value = this.getPrevChar()) {
-        throw new Error(`Unexpected character: ${message} "${value}" at ${this.stream.line}:${this.stream.column}`);
-    }
-}
-
-const STREAM = {
-    CHAR: '',
-    BACK: false,
-    VALUE: ''
-};
-class TokenizerImpl {
-    get pos() {
-        return this.position;
-    }
-    get tokensAll() {
-        return this.tokens;
-    }
-    /**
-     * 词法分析器
-     * @param {string} source    源代码
-     * @param {TokenizerImplOptions} options 可选参数 // TODO: 可能后续会增加
-     */
-    constructor(source, options) {
-        this.tokens = [];
-        this.brackets = [];
-        this.position = new Position(removeComment(source));
-        // this.options = options
-        // this.lexer()
-    }
-    lexer() {
-        const process = new processImpl(this);
-        this.position.read(() => {
-            STREAM.VALUE = STREAM.CHAR = '';
-            const token = process.process();
-            this.addToken(token.type, token.value);
-        });
-        if (!processBrackets(this.brackets)) {
-            this.pos.toErrorPosition(`Missing brackets`, `"{" | "[" | "(" | ")" | "]" | "}"`);
-        }
-        const tokens = this.tokens.filter((token) => token.type !== TOKEN.SPACE);
-        // console.log('tokens: ', tokens)
-        return tokens;
-    }
-    setBrackets(char) {
-        this.brackets.push(char);
-    }
-    addToken(type, value) {
-        this.tokens.push({
-            type,
-            value,
-            pos: { line: this.position.line, column: this.position.column }
-        });
-    }
-}
-class processImpl {
-    constructor(tokenizer) {
-        this.tokenizer = tokenizer;
-    }
-    process() {
-        let type = processType(this.tokenizer.pos.char);
-        // DFA (Deterministic Finite Automaton)
-        switch (type) {
-            case TOKEN.SPACE:
-                break;
-            case TOKEN.NUMBER:
-                this.processNumber();
-                break;
-            case TOKEN.OPERATOR:
-                this.processOperator();
-                break;
-            case TOKEN.IDENTIFIER:
-                this.processIdentifier();
-                type = isKeyWords(STREAM.VALUE) ? TOKEN.KEYWORD : TOKEN.IDENTIFIER;
-                break;
-            case TOKEN.STRING:
-                this.processString();
-                break;
-            default:
-                this.tokenizer.pos.toErrorPosition();
-        }
-        return { type, value: STREAM.VALUE };
-    }
-    processNumber() {
-        const fn = (char) => isNumber(char) || isPoint(char);
-        this.processValue(fn);
-        const dotCount = (STREAM.VALUE.match(/\./g) || []).length;
-        if (dotCount > 1)
-            this.tokenizer.pos.toErrorPosition(`Too many '.' in number`, STREAM.VALUE);
-    }
-    processOperator() {
-        STREAM.VALUE = this.tokenizer.pos.char;
-        if (isBrackets(STREAM.VALUE))
-            this.tokenizer.setBrackets(STREAM.VALUE);
-        STREAM.CHAR = this.tokenizer.pos.next();
-        if (isDoubleOperator(STREAM.CHAR + STREAM.CHAR)) {
-            STREAM.VALUE += STREAM.CHAR;
-            return;
-        }
-        this.tokenizer.pos.back();
-    }
-    processIdentifier() {
-        this.processValue(isIdentifier);
-    }
-    processString() {
-        const symbol = this.tokenizer.pos.char; // '"' or "'""
-        const line = this.tokenizer.pos.line;
-        for (;;) {
-            STREAM.CHAR = this.tokenizer.pos.next();
-            if (isStringSymbol(STREAM.CHAR, symbol) || this.tokenizer.pos.isEOF)
-                break;
-            STREAM.VALUE += STREAM.CHAR;
-        }
-        if (line !== this.tokenizer.pos.line) {
-            this.tokenizer.pos.toErrorPosition(`Unclosed string`, STREAM.VALUE);
-        }
-    }
-    processValue(fn) {
-        STREAM.CHAR = this.tokenizer.pos.char;
-        for (;;) {
-            if (!fn(STREAM.CHAR) || this.tokenizer.pos.isEOF)
-                break;
-            STREAM.VALUE += STREAM.CHAR;
-            STREAM.CHAR = this.tokenizer.pos.next();
-        }
-        if (!STREAM.VALUE)
-            STREAM.VALUE = STREAM.CHAR;
-        if (!this.tokenizer.pos.isEOF)
-            this.tokenizer.pos.back();
-    }
-}
-function processType(char) {
+const getRegExp = (type) => REGEXP.get(type);
+const isIdentifier = (char) => getRegExp(TokenType.IDENTIFIER).test(char);
+const isKeyWords = (char) => getRegExp(TokenType.KEYWORD).test(char);
+const isString = (char) => getRegExp(TokenType.STRING).test(char);
+const isNumber = (char) => getRegExp(TokenType.NUMBER).test(char);
+const isOperator = (char) => getRegExp(TokenType.OPERATOR).test(char);
+const isOperators = (char) => getRegExp(TokenType.OPERATORS).test(char);
+const isBracket = (char) => getRegExp(TokenType.BRACKET).test(char);
+const isWhiteSpace = (char) => getRegExp(TokenType.WHITESPACE).test(char);
+/**
+ * removes comment
+ * @param str   string
+ * @returns
+ */
+const removeComment = (str) => str.replace(getRegExp(TokenType.COMMOENT), '');
+/**
+ * processes number or point
+ * @param char
+ * @returns
+ */
+const isPoint = (char) => char === '.';
+const isNumberOrPoint = (char) => isNumber(char) || isPoint(char);
+const isOverLen = (char) => (char.match(/\./g) || []).length > 1;
+/**
+ * processes string
+ * @param char
+ * @returns
+ */
+const isStringSymbol = (char) => !isString(char);
+/**
+ * Processes a given character and returns the corresponding token type.
+ *
+ * @param {string} char - The character to be processed.
+ * @return {string} The token type.
+ */
+const processType = (char) => {
     if (isWhiteSpace(char))
-        return TOKEN.SPACE;
+        return TokenType.WHITESPACE;
     if (isNumber(char))
-        return TOKEN.NUMBER;
+        return TokenType.NUMBER;
     if (isOperator(char))
-        return TOKEN.OPERATOR;
+        return TokenType.OPERATOR;
     if (isIdentifier(char))
-        return TOKEN.IDENTIFIER;
+        return TokenType.IDENTIFIER;
     if (isString(char))
-        return TOKEN.STRING;
-    return TOKEN.NULL;
-}
-function processBrackets(char) {
+        return TokenType.STRING;
+    throw new Error(`Invalid character "${char}".`);
+};
+/**
+ * Checks if the given array of characters represents a valid set of brackets.
+ *
+ * @param {string[]} char - an array of characters to be processed
+ * @return {boolean} true if the brackets are balanced, false otherwise
+ */
+const processBrackets = (char) => {
     const stack = [];
     if (char.length % 2 !== 0)
         return false;
@@ -360,9 +117,137 @@ function processBrackets(char) {
             stack.pop();
     }
     return stack.length === 0;
-}
-function createTokenizer(source, options) {
-    return new TokenizerImpl(source, options);
+};
+
+class Position {
+    constructor(source) {
+        this.source = source;
+        this.index = 0;
+        this._pos = { char: '', index: 0 };
+    }
+    get isEOF() {
+        return this.index > this.source.length;
+    }
+    get pos() {
+        return this._pos;
+    }
+    next() {
+        this._pos.char = this.source[this.index++];
+        this._pos.index++;
+        return this._pos;
+    }
+    read(cb) {
+        if (this.isEOF)
+            return;
+        this.next() && cb();
+        this.read(cb);
+    }
 }
 
-exports.createTokenizer = createTokenizer;
+class Tokenizer {
+    constructor(source) {
+        this._position = new Position(removeComment(source));
+        this.tokens = [];
+    }
+    get position() {
+        return this._position;
+    }
+    lexer() {
+        const proccess = new ProccessImpl(this);
+        this.tokens = proccess.process();
+        this.tokens = this.tokens.filter((token) => token[0] !== TokenType.WHITESPACE);
+        // console.log('tokens: ', this.tokens)
+        return this.tokens;
+    }
+}
+class ProccessImpl {
+    constructor(tokenizer) {
+        this.tokenizer = tokenizer;
+        this.tokens = [];
+        this.stream = { char: '', value: '', next: true };
+        this.brackets = [];
+    }
+    /**
+     * Processes the input stream and returns an array of tokens.
+     *
+     * @return {Array<[TokenType, string]>} An array of tokens.
+     */
+    process() {
+        var _a, _b;
+        this.stream.char = this.stream.value = '';
+        this.stream.next && this.tokenizer.position.next();
+        this.stream.next = true;
+        this.stream.char = this.tokenizer.position.pos.char;
+        let type = processType(this.stream.char);
+        switch (type) {
+            case TokenType.WHITESPACE:
+                break;
+            case TokenType.NUMBER:
+                this.processNumber();
+                break;
+            case TokenType.OPERATOR:
+                this.processOperator();
+                break;
+            case TokenType.IDENTIFIER:
+                this.processIdentifier();
+                type = isKeyWords((_a = this.stream.value) === null || _a === void 0 ? void 0 : _a.trim())
+                    ? TokenType.KEYWORD
+                    : TokenType.IDENTIFIER;
+                break;
+            case TokenType.STRING:
+                this.processString();
+                break;
+            default:
+                throw new Error(`Unknown token type: ${type}`);
+        }
+        if (this.stream.value)
+            this.tokens.push([type, (_b = this.stream.value) === null || _b === void 0 ? void 0 : _b.trim()]);
+        if (!this.tokenizer.position.isEOF) {
+            this.process();
+        }
+        // check brackets
+        if (!processBrackets(this.brackets)) {
+            throw new Error(`Missing brackets "{" | "[" | "(" | ")" | "]" | "}"`);
+        }
+        return this.tokens;
+    }
+    processIdentifier() {
+        this.processValue(isIdentifier);
+    }
+    processNumber() {
+        this.processValue(isNumberOrPoint);
+        if (isOverLen(this.stream.value))
+            throw new Error(`Too many '.' in number ${this.stream.value}`);
+    }
+    processOperator() {
+        this.stream.value = this.stream.char;
+        this.tokenizer.position.next();
+        if (isBracket(this.stream.value))
+            this.brackets.push(this.stream.value);
+        if (isOperators(this.tokenizer.position.pos.char)) {
+            this.stream.value += this.tokenizer.position.pos.char;
+        }
+        else {
+            this.stream.next = false;
+        }
+    }
+    processString() {
+        this.stream.value = this.stream.char = '';
+        this.tokenizer.position.next();
+        this.processValue(isStringSymbol, true);
+    }
+    processValue(isEOF, next = false) {
+        var _a;
+        for (;;) {
+            if (!isEOF(this.tokenizer.position.pos.char) || this.tokenizer.position.isEOF)
+                break;
+            this.stream.value += (_a = this.tokenizer.position.pos.char) !== null && _a !== void 0 ? _a : '';
+            this.tokenizer.position.next();
+        }
+        if (!isWhiteSpace(this.tokenizer.position.pos.char)) {
+            this.stream.next = next;
+        }
+    }
+}
+
+module.exports = Tokenizer;

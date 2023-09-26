@@ -1,6 +1,6 @@
 {
   "name": "lexers",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "It is a lexer and parser of C built using typescript",
   "type": "module",
   "main": "public/lib/index.cjs.js",
@@ -9,6 +9,9 @@
   "files": [
     "public/lib"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "output": [
     {
       "file": "public/lib/index.umd.js",
@@ -37,7 +40,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --t",
     "prettier": "prettier --write ./src",
     "lint": "eslint ./src",
     "build": "rollup -c",
